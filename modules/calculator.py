@@ -4,10 +4,10 @@ Based on KOSHA GUIDE D-8-2017 / 위험물안전관리법 / 화학물질관리법
 
 Calculates effective dike volume, deductions, and compliance checks.
 """
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 import math
-from typing import Dict, List, Optional
 
 
 # ═══════════════════════════════════════════════════════════════
