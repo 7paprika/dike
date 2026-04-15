@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dike Volume Calculation Sheet - {{ project_name }}</title>
+    <style>
+        /* ─── Base Reset & Typography ─── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Inter', 'Noto Sans KR', -apple-system, sans-serif;
+            font-size: 10pt;
+            color: #2C3E50;
+            line-height: 1.5;
+            background: #fff;
+        }
+
+        /* ─── A4 Page Layout ─── */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 15mm 18mm;
+            background: white;
+        }
+
+        @media print {
+            body { margin: 0; background: white; }
+            .page {
+                width: 100%;
+                min-height: auto;
+                margin: 0;
+                padding: 10mm 15mm;
+                page-break-after: always;
+            }
+            .no-print { display: none !important; }
+        }
+
+        /* ─── Header ─── */
+        .report-header {
+            border: 2px solid #2E6BA6;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .report-header-title {
+            background: linear-gradient(135deg, #2E6BA6, #1A3A5C);
+            color: white;
+            padding: 12px 20px;
+            font-size: 16pt;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .report-header-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 0;
+        }
+
+        .header-cell {
+            padding: 8px 12px;
+            border-right: 1px solid #D1D9E0;
+            border-top: 1px solid #D1D9E0;
+        }
+
+        .header-cell:last-child { border-right: none; }
+
+        .header-cell .label {
+            font-size: 7.5pt;
+            color: #6B7B8D;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .header-cell .value {
+            font-size: 10pt;
+            font-weight: 600;
+            color: #1A3A5C;
+            margin-top: 2px;
+        }
+
+        /* ─── Section ─── */
+        .section {
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #2E6BA6;
+            padding: 6px 12px;
+            background: #EDF2F7;
+            border-left: 4px solid #2E6BA6;
+            border-radius: 0 4px 4px 0;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .section-subtitle {
+            font-size: 9.5pt;
+            font-weight: 600;
+            color: #3A4A5A;
+            margin: 10px 0 6px 0;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #E8ECF0;
+        }
+
+        /* ─── Tables ─── */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 9pt;
+        }
+
+        .data-table th {
+            background: #F0F4F8;
+            color: #2C3E50;
+            font-weight: 600;
+            padding: 7px 10px;
+            text-align: center;
+            border: 1px solid #D1D9E0;
+            font-size: 8.5pt;
+        }
+
+        .data-table td {
+            padding: 6px 10px;
+            border: 1px solid #D1D9E0;
+            text-align: center;
+        }
+
+        .data-table tr:nth-child(even) td {
+            background: #FAFBFD;
+        }
+
+        /* ─── Calculation Steps ─── */
+        .calc-step {
+            background: #FAFBFD;
+            border: 1px solid #E8ECF0;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+        }
+
+        .calc-step .formula {
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            font-size: 10.5pt;
+            color: #1A3A5C;
+            margin: 4px 0;
+            padding: 4px 8px;
+            background: #EDF2F7;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .calc-step .description {
+            font-size: 8.5pt;
+            color: #6B7B8D;
+            margin-top: 3px;
+        }
+
+        /* ─── Result Badge ─── */
+        .result-badge {
+            display: inline-block;
+            padding: 8px 24px;
+            border-radius: 6px;
+            font-size: 14pt;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 8px 0;
+        }
+
+        .result-badge.pass {
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+            color: white;
+            border: 2px solid #1E8449;
+        }
+
+        .result-badge.fail {
+            background: linear-gradient(135deg, #E53935, #EF5350);
+            color: white;
+            border: 2px solid #C62828;
+        }
+
+        .result-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .result-card {
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #D1D9E0;
+            text-align: center;
+        }
+
+        .result-card .rc-label {
+            font-size: 8.5pt;
+            color: #6B7B8D;
+            font-weight: 500;
+        }
+
+        .result-card .rc-value {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #1A3A5C;
+            margin-top: 2px;
+        }
+
+        /* ─── Compliance Checklist ─── */
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 5px 0;
+            border-bottom: 1px solid #F0F4F8;
+            font-size: 9pt;
+        }
+
+        .checklist-item .check-box {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #B0BEC5;
+            border-radius: 3px;
+            margin-right: 10px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .check-text { flex: 1; }
+
+        /* ─── Clearance Status ─── */
+        .status-pass {
+            color: #27AE60;
+            font-weight: 700;
+        }
+
+        .status-fail {
+            color: #E53935;
+            font-weight: 700;
+        }
+
+        /* ─── Diagrams ─── */
+        .diagram-container {
+            margin: 10px 0;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .diagram-container .plotly-graph-div {
+            margin: 0 auto;
+        }
+
+        /* ─── Footer ─── */
+        .report-footer {
+            margin-top: 20px;
+            padding-top: 8px;
+            border-top: 2px solid #2E6BA6;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8pt;
+            color: #6B7B8D;
+        }
+
+        /* ─── Design Basis ─── */
+        .design-basis {
+            background: #EDF2F7;
+            border: 1px solid #D1D9E0;
+            border-radius: 4px;
+            padding: 10px 14px;
+            font-size: 9pt;
+            color: #3A4A5A;
+            margin-bottom: 12px;
+        }
+
+        .design-basis strong {
+            color: #1A3A5C;
+        }
+
+        {{ custom_css }}
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ PAGE 1 ═══════════ -->
+<div class="page">
+
+    <!-- Header -->
+    <div class="report-header">
+        <div class="report-header-title">
+            DIKE VOLUME CALCULATION SHEET
+        </div>
+        <div class="report-header-info">
+            <div class="header-cell">
+                <div class="label">Project Name</div>
+                <div class="value">{{ project_name }}</div>
+            </div>
+            <div class="header-cell">
+                <div class="label">Document No.</div>
+                <div class="value">{{ doc_no }}</div>
+            </div>
+            <div class="header-cell">
+                <div class="label">Engineer</div>
+                <div class="value">{{ engineer_name }}</div>
+            </div>
+            <div class="header-cell">
+                <div class="label">Date</div>
+                <div class="value">{{ date }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Design Basis -->
+    <div class="design-basis">
+        <strong>Design Basis:</strong> KOSHA GUIDE D-8-2017 (위험물질 누출방지를 위한 방유제 설치에 관한 기술지침)
+        및 내부 Engineering Standard (우수량/경사도 반영)
+    </div>
+
+    <!-- 1. Input Data Summary -->
+    <div class="section">
+        <div class="section-title">1. Input Data Summary</div>
+
+        <div class="section-subtitle">1.1 Dike Dimensions (방유제 제원)</div>
+        <table class="data-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Symbol</th>
+                <th>Value</th>
+                <th>Unit</th>
+            </tr>
+            <tr>
+                <td>Length (가로)</td>
+                <td>L</td>
+                <td>{{ dike_L }}</td>
+                <td>m</td>
+            </tr>
+            <tr>
+                <td>Width (세로)</td>
+                <td>W</td>
+                <td>{{ dike_W }}</td>
+                <td>m</td>
+            </tr>
+            <tr>
+                <td>Height (높이)</td>
+                <td>H<sub>dike</sub></td>
+                <td>{{ dike_H }}</td>
+                <td>m</td>
+            </tr>
+        </table>
+
+        <div class="section-subtitle">1.2 Tank Specifications (탱크 제원) — {{ tank_count }} Tanks</div>
+        <table class="data-table">
+            <tr>
+                <th>No.</th>
+                <th>Tank ID</th>
+                <th>Diameter (m)</th>
+                <th>Height (m)</th>
+                <th>X (m)</th>
+                <th>Y (m)</th>
+                <th>Foundation Vol. (m³)</th>
+                <th>Piping Vol. (m³)</th>
+            </tr>
+            {% for t in tanks %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ t.name }}</td>
+                <td>{{ t.diameter }}</td>
+                <td>{{ t.height }}</td>
+                <td>{{ t.x }}</td>
+                <td>{{ t.y }}</td>
+                <td>{{ t.V_foundation }}</td>
+                <td>{{ t.V_piping }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 2. Layout Drawing -->
+    {% if plan_view_html or section_view_html %}
+    <div class="section">
+        <div class="section-title">2. Layout Drawing (배치 도식화)</div>
+
+        {% if plan_view_html %}
+        <div class="section-subtitle">2.1 Plan View (평면도)</div>
+        <div class="diagram-container">
+            {{ plan_view_html }}
+        </div>
+        {% endif %}
+
+        {% if section_view_html %}
+        <div class="section-subtitle">2.2 Section View (단면도)</div>
+        <div class="diagram-container">
+            {{ section_view_html }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- 3. Volume Calculation Details -->
+    <div class="section">
+        <div class="section-title">3. Volume Calculation Details</div>
+
+        <div class="section-subtitle">3.1 Gross Dike Volume (방유제 전체 체적)</div>
+        <div class="calc-step">
+            <div class="formula">
+                V<sub>dike</sub> = L × W × H<sub>dike</sub>
+                = {{ dike_L }} × {{ dike_W }} × {{ dike_H }}
+                = <strong>{{ V_dike }} m³</strong>
+            </div>
+        </div>
+
+        <div class="section-subtitle">3.2 Required Effective Volume (법적 요구 유효용량)</div>
+        <div class="calc-step">
+            <div class="formula">
+                V<sub>req</sub> = max(V<sub>tank,i</sub>) = Volume of {{ largest_tank }}
+                = <strong>{{ V_req }} m³</strong>
+            </div>
+            <div class="description">가장 큰 탱크의 전체 용량이 법적 최소 유효 용량입니다.</div>
+        </div>
+
+        <div class="section-subtitle">3.3 Volume Deductions (차감 체적)</div>
+        <table class="data-table">
+            <tr>
+                <th>Item</th>
+                <th>Symbol</th>
+                <th>Volume (m³)</th>
+                <th>Note</th>
+            </tr>
+            <tr>
+                <td>Other Tanks Below Dike Height</td>
+                <td>V<sub>sub_tanks</sub></td>
+                <td>{{ V_sub_tanks }}</td>
+                <td>최대 탱크({{ largest_tank }}) 제외</td>
+            </tr>
+            <tr>
+                <td>All Tank Foundations</td>
+                <td>V<sub>foundations</sub></td>
+                <td>{{ V_foundations }}</td>
+                <td>모든 탱크 기초 체적</td>
+            </tr>
+            <tr>
+                <td>Piping &amp; Accessories</td>
+                <td>V<sub>piping</sub></td>
+                <td>{{ V_piping }}</td>
+                <td>부속설비 체적</td>
+            </tr>
+            <tr>
+                <td>Slope Loss</td>
+                <td>V<sub>slope</sub></td>
+                <td>{{ V_slope }}</td>
+                <td>
+                    {% if advanced.enable_slope %}
+                    경사도 {{ advanced.slope_pct }}% 적용
+                    {% else %}
+                    미적용
+                    {% endif %}
+                </td>
+            </tr>
+            <tr style="font-weight: 700; background: #EDF2F7;">
+                <td colspan="2">Total Deductions</td>
+                <td>{{ deductions_total }}</td>
+                <td></td>
+            </tr>
+        </table>
+
+        {% if advanced.enable_rain or advanced.enable_fire %}
+        <div class="section-subtitle">3.4 Additional Margin (추가 여유 용량)</div>
+        <table class="data-table">
+            <tr>
+                <th>Item</th>
+                <th>Calculation</th>
+                <th>Volume (m³)</th>
+            </tr>
+            {% if advanced.enable_rain %}
+            <tr>
+                <td>Rainfall (우수량)</td>
+                <td>{{ dike_L }} × {{ dike_W }} × {{ advanced.rainfall_mm }} / 1000</td>
+                <td>{{ V_rain }}</td>
+            </tr>
+            {% endif %}
+            {% if advanced.enable_fire %}
+            <tr>
+                <td>Fire Water (소방수)</td>
+                <td>{{ advanced.fire_flow_rate }} m³/hr × {{ advanced.fire_duration }} hr</td>
+                <td>{{ V_fire }}</td>
+            </tr>
+            {% endif %}
+            <tr style="font-weight: 700; background: #EDF2F7;">
+                <td>Applied Margin ({{ margin_method }})</td>
+                <td></td>
+                <td>{{ V_margin }}</td>
+            </tr>
+        </table>
+        {% endif %}
+    </div>
+
+    <!-- 4. Final Result -->
+    <div class="section">
+        <div class="section-title">4. Final Result (최종 판정)</div>
+
+        <div class="calc-step">
+            <div class="formula">
+                V<sub>eff</sub> = V<sub>dike</sub> − V<sub>sub_tanks</sub> − V<sub>foundations</sub> − V<sub>piping</sub> − V<sub>slope</sub>
+                = <strong>{{ V_eff }} m³</strong>
+            </div>
+            <div class="formula">
+                V<sub>required</sub> = V<sub>req</sub> + V<sub>margin</sub>
+                = {{ V_req }} + {{ V_margin }}
+                = <strong>{{ V_required_total }} m³</strong>
+            </div>
+            <div class="formula">
+                Verdict: V<sub>eff</sub> ({{ V_eff }}) {% if is_pass %}≥{% else %}&lt;{% endif %} V<sub>required</sub> ({{ V_required_total }})
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 14px 0;">
+            <span class="result-badge {{ 'pass' if is_pass else 'fail' }}">
+                {% if is_pass %}✅ PASS (적합){% else %}❌ FAIL (부적합){% endif %}
+            </span>
+        </div>
+
+        <div class="result-summary">
+            <div class="result-card">
+                <div class="rc-label">Effective Volume (유효용량)</div>
+                <div class="rc-value">{{ V_eff }} m³</div>
+            </div>
+            <div class="result-card">
+                <div class="rc-label">Margin (여유율)</div>
+                <div class="rc-value" style="color: {{ '#27AE60' if is_pass else '#E53935' }}">{{ margin_pct }}%</div>
+            </div>
+        </div>
+
+        {% if result_chart_html %}
+        <div class="diagram-container">
+            {{ result_chart_html }}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 5. Clearance Verification -->
+    {% if clearances %}
+    <div class="section">
+        <div class="section-title">5. Clearance Verification (이격거리 검증)</div>
+        <table class="data-table">
+            <tr>
+                <th>Item A</th>
+                <th>Item B</th>
+                <th>Distance (m)</th>
+                <th>Min. Required (m)</th>
+                <th>Status</th>
+            </tr>
+            {% for c in clearances %}
+            <tr>
+                <td>{{ c.item_a }}</td>
+                <td>{{ c.item_b }}</td>
+                <td>{{ c.distance }}</td>
+                <td>{{ c.min_required }}</td>
+                <td class="{{ 'status-pass' if c.is_pass else 'status-fail' }}">
+                    {{ c.status }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- 6. Code Compliance Checklist -->
+    <div class="section">
+        <div class="section-title">6. Code Compliance Checklist (법규 준수 체크리스트)</div>
+
+        <div class="checklist-item">
+            <div class="check-box"></div>
+            <div class="check-text">
+                <strong>이격거리:</strong> 방유제 내면과 탱크 외면 사이 최소 1.5m 유지 여부
+                (KOSHA GUIDE D-8-2017)
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="check-box"></div>
+            <div class="check-text">
+                <strong>계단 설치:</strong> 방유제 높이 1m 이상 시 계단 설치 및 계단 측면 안전난간 설치 여부
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="check-box"></div>
+            <div class="check-text">
+                <strong>방유제 높이:</strong> 방유제 높이 0.5m 이상 3.0m 이하 준수 여부
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="check-box"></div>
+            <div class="check-text">
+                <strong>외부 감시:</strong> 외부 감시창 또는 CCTV 설치 여부
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="check-box"></div>
+            <div class="check-text">
+                <strong>배수 설비:</strong> 방유제 내 우수 및 누출물 배수 시설 설치 여부
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="check-box"></div>
+            <div class="check-text">
+                <strong>내부 코팅:</strong> 방유제 바닥 및 내면 불침투성 재료 코팅 여부
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="report-footer">
+        <div>Generated by <strong>Dike Volume Calculator</strong> (KOSHA GUIDE D-8-2017)</div>
+        <div>{{ timestamp }}</div>
+    </div>
+
+</div>
+
+</body>
+</html>

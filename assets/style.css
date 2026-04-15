@@ -1,0 +1,316 @@
+/* ═══════════════════════════════════════════════════════════════
+   Dike Volume Calculator — Streamlit Custom Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Import Fonts ─── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+/* ─── Global ─── */
+.stApp {
+    font-family: 'Inter', 'Noto Sans KR', sans-serif;
+}
+
+/* ─── Sidebar ─── */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #1A2332 0%, #243447 100%);
+}
+
+/* All text inside sidebar: bright white/light */
+[data-testid="stSidebar"],
+[data-testid="stSidebar"] * {
+    color: #E0E8F0 !important;
+}
+
+[data-testid="stSidebar"] .stMarkdown h1,
+[data-testid="stSidebar"] .stMarkdown h2,
+[data-testid="stSidebar"] .stMarkdown h3 {
+    color: #FFFFFF !important;
+}
+
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stRadio label,
+[data-testid="stSidebar"] .stSelectbox label,
+[data-testid="stSidebar"] .stTextInput label,
+[data-testid="stSidebar"] .stNumberInput label {
+    color: #C8D8E8 !important;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+/* Sidebar radio button text */
+[data-testid="stSidebar"] [role="radiogroup"] label span,
+[data-testid="stSidebar"] [role="radiogroup"] label p,
+[data-testid="stSidebar"] .stRadio div[data-baseweb] label {
+    color: #E0E8F0 !important;
+}
+
+/* Sidebar selectbox text */
+[data-testid="stSidebar"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-baseweb="select"] div {
+    color: #E0E8F0 !important;
+}
+
+/* Sidebar input fields */
+[data-testid="stSidebar"] .stTextInput > div > div > input,
+[data-testid="stSidebar"] .stNumberInput > div > div > input,
+[data-testid="stSidebar"] .stTextArea textarea {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #FFFFFF !important;
+    border-radius: 8px;
+}
+
+[data-testid="stSidebar"] .stTextInput > div > div > input::placeholder,
+[data-testid="stSidebar"] .stTextArea textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Sidebar selectbox container */
+[data-testid="stSidebar"] .stSelectbox > div > div {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px;
+}
+
+/* Sidebar expander */
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+[data-testid="stSidebar"] [data-testid="stExpander"] summary span,
+[data-testid="stSidebar"] [data-testid="stExpander"] summary p {
+    color: #E0E8F0 !important;
+    font-weight: 600;
+}
+
+/* Sidebar buttons */
+[data-testid="stSidebar"] .stButton > button {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #E0E8F0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Sidebar code block */
+[data-testid="stSidebar"] code {
+    background: rgba(0, 0, 0, 0.3) !important;
+    color: #90CAF9 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Sidebar caption / small text */
+[data-testid="stSidebar"] .stCaption,
+[data-testid="stSidebar"] small {
+    color: #8899AA !important;
+}
+
+/* Sidebar divider */
+[data-testid="stSidebar"] hr {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ─── Main Area Title ─── */
+.main-title {
+    text-align: center;
+    padding: 16px 0 8px;
+}
+
+.main-title h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #2E6BA6, #1A3A5C);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+}
+
+.main-title .subtitle {
+    font-size: 0.9rem;
+    color: #6B7B8D;
+    font-weight: 400;
+    margin-top: 4px;
+}
+
+/* ─── Result Cards ─── */
+.metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid #E8ECF0;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card .mc-label {
+    font-size: 0.78rem;
+    color: #6B7B8D;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-card .mc-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1A3A5C;
+    margin-top: 4px;
+}
+
+.metric-card .mc-unit {
+    font-size: 0.8rem;
+    color: #8899AA;
+    font-weight: 400;
+}
+
+.metric-card.pass {
+    border-left: 4px solid #27AE60;
+}
+
+.metric-card.fail {
+    border-left: 4px solid #E53935;
+}
+
+/* ─── Verdict Badge ─── */
+.verdict-pass {
+    background: linear-gradient(135deg, #27AE60, #2ECC71);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    letter-spacing: 0.5px;
+}
+
+.verdict-fail {
+    background: linear-gradient(135deg, #E53935, #EF5350);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(229, 57, 53, 0.3);
+    letter-spacing: 0.5px;
+}
+
+/* ─── Advanced Toggle Section ─── */
+.adv-toggle {
+    background: #F8FAFB;
+    border: 1px solid #E8ECF0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+}
+
+.adv-toggle .adv-label {
+    font-weight: 600;
+    color: #2C3E50;
+    margin-bottom: 6px;
+}
+
+/* ─── Warning Box ─── */
+.warning-box {
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    border: 1px solid #FFB74D;
+    border-left: 4px solid #F57C00;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.88rem;
+    color: #E65100 !important;
+    font-weight: 500;
+}
+
+.warning-box * {
+    color: #E65100 !important;
+}
+
+/* ─── Info Box ─── */
+.info-box {
+    background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+    border: 1px solid #90CAF9;
+    border-left: 4px solid #2196F3;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: #1565C0 !important;
+}
+
+.info-box * {
+    color: #1565C0 !important;
+}
+
+/* ─── Tank Management Buttons ─── */
+.tank-buttons {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0 14px;
+}
+
+.tank-count-badge {
+    background: linear-gradient(135deg, #2E6BA6, #1A3A5C);
+    color: white !important;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.tank-count-badge * {
+    color: white !important;
+}
+
+/* ─── Data Editor Styling ─── */
+[data-testid="stDataEditor"] {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ─── Tab Styling ─── */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 4px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 10px 20px;
+    border-radius: 8px 8px 0 0;
+}
+
+/* ─── Buttons ─── */
+.stDownloadButton > button {
+    background: linear-gradient(135deg, #2E6BA6, #1A3A5C) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.stDownloadButton > button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(46, 107, 166, 0.35) !important;
+}
