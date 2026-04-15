@@ -442,11 +442,14 @@ def create_result_chart(calc_result) -> go.Figure:
     """
     Create a bar chart comparing required volume vs effective volume.
     """
+    dike_term = getattr(calc_result, 'dike_term', '방유제')
+    factor_pct = int(getattr(calc_result, 'volume_factor', 1.0) * 100)
+
     categories = [
-        "방유제 전체\n(V_dike)",
+        f"{dike_term} 전체\n(V_dike)",
         "차감 합계\n(Deductions)",
         "유효용량\n(V_eff)",
-        "요구용량\n(V_req + Margin)",
+        f"요구용량\n({factor_pct}% + Margin)",
     ]
 
     deductions_total = (

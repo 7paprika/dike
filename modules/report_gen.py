@@ -15,6 +15,9 @@ from jinja2 import Environment, FileSystemLoader
 import plotly.graph_objects as go
 
 
+from modules.calculator import REGULATIONS
+
+
 def _fig_to_base64(fig: go.Figure, width: int = 800, height: int = 450) -> str:
     """Convert a Plotly figure to a base64-encoded PNG for HTML embedding."""
     try:
@@ -94,6 +97,14 @@ def generate_report(
             "is_pass": c.is_pass,
         })
 
+    # Regulation info
+    reg = REGULATIONS.get(
+        getattr(calc_result, 'regulation_key', 'kosha'),
+        REGULATIONS["kosha"]
+    )
+    volume_factor = getattr(calc_result, 'volume_factor', 1.0)
+    volume_factor_pct = int(volume_factor * 100)
+
     # Render
     html = template.render(
         # Project
@@ -102,6 +113,14 @@ def generate_report(
         engineer_name=project_info.get("engineer_name", "N/A"),
         date=datetime.now().strftime("%Y-%m-%d"),
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+
+        # Regulation
+        regulation_name=reg["name"],
+        regulation_short_name=reg["short_name"],
+        regulation_authority=reg["authority"],
+        regulation_target=reg["target"],
+        volume_factor=volume_factor,
+        volume_factor_pct=volume_factor_pct,
 
         # Dike
         dike_L=dike_params.get("L", 0),
@@ -115,6 +134,7 @@ def generate_report(
         # Calculation results
         V_dike=f"{calc_result.V_dike:,.2f}",
         V_req=f"{calc_result.V_req:,.2f}",
+        V_req_factored=f"{getattr(calc_result, 'V_req_factored', calc_result.V_req):,.2f}",
         largest_tank=calc_result.largest_tank_name,
         V_sub_tanks=f"{calc_result.V_sub_tanks:,.2f}",
         V_foundations=f"{calc_result.V_foundations:,.2f}",

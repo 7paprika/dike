@@ -1,13 +1,54 @@
 """
 Dike Volume Calculator — Core Calculation Engine
-Based on KOSHA GUIDE D-8-2017
+Based on KOSHA GUIDE D-8-2017 / 위험물안전관리법 / 화학물질관리법
 
 Calculates effective dike volume, deductions, and compliance checks.
 """
 
 from dataclasses import dataclass, field
 import math
-from typing import List, Optional
+from typing import Dict, List, Optional
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Regulation Definitions
+# ═══════════════════════════════════════════════════════════════
+REGULATIONS: Dict[str, dict] = {
+    "kosha": {
+        "name": "산업안전보건법 (KOSHA GUIDE D-8-2017)",
+        "short_name": "KOSHA GUIDE D-8-2017",
+        "authority": "고용노동부",
+        "target": "일반적인 위험물질",
+        "volume_factor": 1.00,  # 최대 탱크 용량의 100%
+        "description": "위험물질 누출방지를 위한 방유제 설치에 관한 기술지침",
+        "dike_term": "방유제",
+    },
+    "fire_safety": {
+        "name": "위험물안전관리법",
+        "short_name": "위험물안전관리법",
+        "authority": "소방청",
+        "target": "제4류 위험물 (인화성 액체 등)",
+        "volume_factor": 1.10,  # 최대 탱크 용량의 110%
+        "description": "인화성이 없는 액체 위험물은 예외적으로 100% 적용 가능",
+        "dike_term": "방유제",
+    },
+    "chemical": {
+        "name": "화학물질관리법",
+        "short_name": "화학물질관리법",
+        "authority": "환경부",
+        "target": "유해화학물질",
+        "volume_factor": 1.10,  # 최대 탱크 용량의 110%
+        "description": "법적 용어로 방유제 대신 '방류벽' 사용",
+        "dike_term": "방류벽",
+    },
+}
+
+# User-facing labels for selectbox
+REGULATION_LABELS = {
+    "kosha": "🏭 산업안전보건법 (KOSHA GUIDE) — 100%",
+    "fire_safety": "🚒 위험물안전관리법 — 110%",
+    "chemical": "🧪 화학물질관리법 — 110%",
+}
 
 
 @dataclass
@@ -47,6 +88,9 @@ class DikeInput:
 @dataclass
 class AdvancedInput:
     """Advanced correction inputs."""
+    # Applicable regulation
+    regulation_key: str = "kosha"  # "kosha" | "fire_safety" | "chemical"
+
     # Rainfall
     enable_rain: bool = False
     rainfall_mm: float = 0.0     # mm/hr (단일 시간 최대 강우량)
@@ -77,9 +121,16 @@ class ClearanceResult:
 @dataclass
 class CalcResult:
     """Complete calculation result."""
+    # Regulation
+    regulation_key: str = "kosha"
+    regulation_name: str = ""
+    volume_factor: float = 1.0
+    dike_term: str = "방유제"
+
     # Basic volumes
     V_dike: float = 0.0
-    V_req: float = 0.0
+    V_req: float = 0.0          # raw max tank volume
+    V_req_factored: float = 0.0 # V_req × volume_factor
     largest_tank_name: str = ""
 
     # Deductions
@@ -231,12 +282,22 @@ def calculate(
         })
     result.tank_volumes = tank_vols
 
+    # ── Regulation setup ──
+    reg = REGULATIONS.get(advanced.regulation_key, REGULATIONS["kosha"])
+    result.regulation_key = advanced.regulation_key
+    result.regulation_name = reg["name"]
+    result.volume_factor = reg["volume_factor"]
+    result.dike_term = reg["dike_term"]
+
     if tank_vols:
         largest_idx = max(range(len(tank_vols)), key=lambda i: tank_vols[i]["volume"])
         result.V_req = tank_vols[largest_idx]["volume"]
         result.largest_tank_name = tank_vols[largest_idx]["name"]
     else:
         result.V_req = 0.0
+
+    # Apply regulation volume factor
+    result.V_req_factored = result.V_req * result.volume_factor
 
     # ── Step 3: Deductions ──
     # V_sub_tanks: submerged volume of all tanks EXCEPT the largest
@@ -276,7 +337,7 @@ def calculate(
         - result.V_slope
     )
 
-    result.V_required_total = result.V_req + result.V_margin
+    result.V_required_total = result.V_req_factored + result.V_margin
     result.is_pass = result.V_eff >= result.V_required_total
 
     if result.V_required_total > 0:

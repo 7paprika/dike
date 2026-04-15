@@ -12,7 +12,8 @@ import streamlit as st
 import pandas as pd
 
 from modules.calculator import (
-    DikeInput, TankInput, AdvancedInput, calculate, auto_arrange_tanks
+    DikeInput, TankInput, AdvancedInput, calculate, auto_arrange_tanks,
+    REGULATIONS, REGULATION_LABELS
 )
 from modules.visualization import (
     create_plan_view, create_section_view, create_result_chart
@@ -52,6 +53,7 @@ def init_session():
         "engineer_name": "",
         "substance_type": "액체 (Liquid)",
         "tank_config": "단일 탱크",
+        "regulation_key": "kosha",
         "dike_L": 30.0,
         "dike_W": 20.0,
         "dike_H": 1.5,
@@ -142,6 +144,39 @@ with st.sidebar:
         key="inp_engineer_name",
         placeholder="예: 홍길동"
     )
+
+    st.markdown("---")
+
+    # Applicable Regulation
+    st.markdown("### 📜 적용 법규")
+    reg_labels = list(REGULATION_LABELS.values())
+    reg_keys = list(REGULATION_LABELS.keys())
+    current_reg_key = st.session_state.get("regulation_key", "kosha")
+    current_reg_idx = reg_keys.index(current_reg_key) if current_reg_key in reg_keys else 0
+
+    selected_reg_label = st.selectbox(
+        "법규 선택",
+        reg_labels,
+        index=current_reg_idx,
+        key="inp_regulation",
+    )
+    selected_reg_key = reg_keys[reg_labels.index(selected_reg_label)]
+    st.session_state["regulation_key"] = selected_reg_key
+
+    # Show regulation details
+    reg_info = REGULATIONS[selected_reg_key]
+    factor_pct = int(reg_info['volume_factor'] * 100)
+    st.markdown(
+        f'<div class="info-box">'
+        f'<strong>소관 부처:</strong> {reg_info["authority"]}<br>'
+        f'<strong>대상 물질:</strong> {reg_info["target"]}<br>'
+        f'<strong>요구 기준:</strong> 최대 탱크 용량의 <strong>{factor_pct}%</strong> 이상<br>'
+        f'<strong>용어:</strong> {reg_info["dike_term"]}'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+    if reg_info.get("description"):
+        st.caption(f"ℹ️ {reg_info['description']}")
 
     st.markdown("---")
 
@@ -442,6 +477,7 @@ def build_inputs():
     method = "max" if "MAX" in adv_method else "sum"
 
     advanced = AdvancedInput(
+        regulation_key=st.session_state.get("regulation_key", "kosha"),
         enable_rain=st.session_state.get("enable_rain", False),
         rainfall_mm=st.session_state.get("rainfall_mm", 0.0),
         enable_fire=st.session_state.get("enable_fire", False),
@@ -618,13 +654,26 @@ with tab4:
     dike_calc, tanks_calc, adv_calc = build_inputs()
     result = calculate(dike_calc, tanks_calc, adv_calc)
 
+    # ── Applied Regulation Badge ──
+    reg_info = REGULATIONS.get(result.regulation_key, REGULATIONS["kosha"])
+    factor_pct = int(result.volume_factor * 100)
+    st.markdown(
+        f'<div class="info-box">'
+        f'📜 <strong>적용 법규:</strong> {result.regulation_name} '
+        f'| <strong>요구 기준:</strong> 최대 탱크 용량 × {factor_pct}% '
+        f'| <strong>용어:</strong> {result.dike_term}'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown("")
+
     # ── Result Summary Cards ──
     col_r1, col_r2, col_r3, col_r4 = st.columns(4)
 
     with col_r1:
         st.markdown(
             f'<div class="metric-card">'
-            f'<div class="mc-label">방유제 전체 체적</div>'
+            f'<div class="mc-label">{result.dike_term} 전체 체적</div>'
             f'<div class="mc-value">{result.V_dike:,.1f} <span class="mc-unit">m³</span></div>'
             f'</div>',
             unsafe_allow_html=True
@@ -650,7 +699,7 @@ with tab4:
     with col_r4:
         st.markdown(
             f'<div class="metric-card">'
-            f'<div class="mc-label">요구용량 (V_req + Margin)</div>'
+            f'<div class="mc-label">요구용량 ({factor_pct}% + Margin)</div>'
             f'<div class="mc-value">{result.V_required_total:,.1f} <span class="mc-unit">m³</span></div>'
             f'</div>',
             unsafe_allow_html=True
@@ -684,8 +733,9 @@ with tab4:
     with st.expander("📋 상세 계산 내역", expanded=False):
         breakdown = {
             "항목": [
-                "V_dike (방유제 전체)",
+                f"V_dike ({result.dike_term} 전체)",
                 f"V_req (최대 탱크: {result.largest_tank_name})",
+                f"V_req × {factor_pct}% (법적 요구용량)",
                 "V_sub_tanks (기타 탱크 침수부)",
                 "V_foundations (기초 합계)",
                 "V_piping (부속설비 합계)",
@@ -699,6 +749,7 @@ with tab4:
             "체적 (m³)": [
                 f"{result.V_dike:,.2f}",
                 f"{result.V_req:,.2f}",
+                f"{result.V_req_factored:,.2f}",
                 f"{result.V_sub_tanks:,.2f}",
                 f"{result.V_foundations:,.2f}",
                 f"{result.V_piping:,.2f}",
