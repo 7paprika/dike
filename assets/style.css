@@ -321,3 +321,10 @@
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(46, 107, 166, 0.35) !important;
 }
+
+/* ─── Fix Selectbox Dropdown Visibility ─── */
+div[data-baseweb="popover"] ul[role="listbox"] li,
+div[data-baseweb="popover"] ul[role="listbox"] li span,
+div[data-baseweb="popover"] ul[role="listbox"] li div {
+    color: #1A2332 !important;
+}

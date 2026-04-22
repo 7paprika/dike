@@ -101,6 +101,7 @@ def load_from_url():
                 st.session_state["tanks_df"] = restored["tanks_df"]
             # Advanced
             adv = restored["advanced"]
+            st.session_state["regulation_key"] = adv.get("regulation_key", "kosha")
             st.session_state["enable_rain"] = adv.get("enable_rain", False)
             st.session_state["rainfall_mm"] = adv.get("rainfall_mm", 50.0)
             st.session_state["enable_fire"] = adv.get("enable_fire", False)
@@ -237,6 +238,7 @@ with st.sidebar:
                 },
                 tanks_df=st.session_state.get("tanks_df", pd.DataFrame()),
                 advanced={
+                    "regulation_key": st.session_state.get("regulation_key", "kosha"),
                     "enable_rain": st.session_state.get("enable_rain", False),
                     "rainfall_mm": st.session_state.get("rainfall_mm", 50.0),
                     "enable_fire": st.session_state.get("enable_fire", False),
