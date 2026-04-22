@@ -511,7 +511,7 @@ with tab2:
 
     # Section View
     slope_for_viz = adv_viz.slope_pct if adv_viz.enable_slope else 0.0
-    section_fig = create_section_view(dike_viz, tanks_viz, slope_for_viz)
+    section_fig = create_section_view(dike_viz, tanks_viz, slope_for_viz, result_viz.largest_tank_name)
     st.plotly_chart(section_fig, width="stretch", key="section_view")
 
     # Clearance table
@@ -773,7 +773,7 @@ with tab4:
             # Build figures for report
             plan_fig_r = create_plan_view(dike_calc, tanks_calc, result.clearances)
             slope_r = adv_calc.slope_pct if adv_calc.enable_slope else 0.0
-            section_fig_r = create_section_view(dike_calc, tanks_calc, slope_r)
+            section_fig_r = create_section_view(dike_calc, tanks_calc, slope_r, result.largest_tank_name)
             result_fig_r = create_result_chart(result)
 
             html_report = generate_report(

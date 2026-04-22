@@ -67,14 +67,25 @@ class TankInput:
         return self.diameter / 2.0
 
     @property
+    def area(self) -> float:
+        """Base area of the tank."""
+        return math.pi / 4.0 * self.diameter ** 2
+
+    @property
     def volume(self) -> float:
         """Full tank volume (cylinder)."""
-        return math.pi / 4.0 * self.diameter ** 2 * self.height
+        return self.area * self.height
 
     def submerged_volume(self, h_dike: float) -> float:
-        """Volume of tank below dike height."""
-        h_sub = min(self.height, h_dike)
-        return math.pi / 4.0 * self.diameter ** 2 * h_sub
+        """Volume of tank shell below dike height.
+        To prevent double-deduction with foundation volume,
+        the foundation height is estimated and subtracted from the submerged height.
+        """
+        h_f = self.V_foundation / self.area if self.area > 0 else 0.0
+        if h_dike <= h_f:
+            return 0.0
+        h_sub = min(self.height, h_dike - h_f)
+        return self.area * h_sub
 
 
 @dataclass

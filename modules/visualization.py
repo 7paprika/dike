@@ -27,6 +27,7 @@ COLORS = {
     "dike_wall_fill": "rgba(150, 150, 160, 0.5)",
     "submerged_fill": "rgba(255, 180, 60, 0.3)",
     "slope_fill": "rgba(200, 100, 80, 0.15)",
+    "deducted_fill": "rgba(235, 87, 87, 0.6)",
     "bg": "#FAFBFD",
     "grid": "#E8ECF0",
 }
@@ -248,7 +249,8 @@ def create_plan_view(
 def create_section_view(
     dike: DikeInput,
     tanks: List[TankInput],
-    slope_pct: float = 0.0
+    slope_pct: float = 0.0,
+    largest_tank_name: str = ""
 ) -> go.Figure:
     """
     Create a Section/Elevation View showing:
@@ -343,13 +345,26 @@ def create_section_view(
     max_h = max((t.height for t in tanks), default=dike.H_dike)
 
     for t in sorted_tanks:
-        # Tank rectangle (projected width = diameter)
+        # Tank horizontal span
         tank_x0 = t.x - t.radius
         tank_x1 = t.x + t.radius
-        tank_y0 = ground_y
-        tank_y1 = t.height
+        
+        area = math.pi / 4.0 * t.diameter ** 2
+        h_f = t.V_foundation / area if area > 0 else 0.0
+        
+        # 1. Tank foundation rectangle
+        if h_f > 0:
+            fig.add_shape(
+                type="rect",
+                x0=tank_x0, y0=ground_y, x1=tank_x1, y1=ground_y + h_f,
+                fillcolor="#C0C8D0",
+                line=dict(color="#808C99", width=2),
+            )
 
-        # Full tank outline
+        # 2. Tank shell outline
+        tank_y0 = ground_y + h_f
+        tank_y1 = tank_y0 + t.height
+
         fig.add_shape(
             type="rect",
             x0=tank_x0, y0=tank_y0, x1=tank_x1, y1=tank_y1,
@@ -357,14 +372,40 @@ def create_section_view(
             line=dict(color=COLORS["tank_line"], width=2),
         )
 
-        # Submerged zone (below dike height) - highlight
-        sub_h = min(t.height, dike.H_dike)
-        fig.add_shape(
-            type="rect",
-            x0=tank_x0, y0=tank_y0, x1=tank_x1, y1=sub_h,
-            fillcolor=COLORS["submerged_fill"],
-            line=dict(color="rgba(255,160,40,0.6)", width=1, dash="dot"),
-        )
+        # 3. Highlight Submerged/Deducted zones
+        is_largest = (t.name == largest_tank_name)
+
+        # Foundation is generally deducted below H_dike for all tanks
+        if h_f > 0:
+            f_sub_h = min(ground_y + h_f, dike.H_dike)
+            if f_sub_h > ground_y:
+                fig.add_shape(
+                    type="rect",
+                    x0=tank_x0, y0=ground_y, x1=tank_x1, y1=f_sub_h,
+                    fillcolor=COLORS["deducted_fill"],
+                    line=dict(color="rgba(200, 50, 50, 0.4)", width=1, dash="dot"),
+                )
+
+        # Tank shell highlight
+        if dike.H_dike > ground_y + h_f:
+            shell_sub_h = min(tank_y1, dike.H_dike)
+            
+            if not is_largest:
+                # Deducted (Red-ish)
+                fig.add_shape(
+                    type="rect",
+                    x0=tank_x0, y0=tank_y0, x1=tank_x1, y1=shell_sub_h,
+                    fillcolor=COLORS["deducted_fill"],
+                    line=dict(color="rgba(200, 50, 50, 0.4)", width=1, dash="dot"),
+                )
+            else:
+                # Largest tank spilling zone (Orange-ish)
+                fig.add_shape(
+                    type="rect",
+                    x0=tank_x0, y0=tank_y0, x1=tank_x1, y1=shell_sub_h,
+                    fillcolor=COLORS["submerged_fill"],
+                    line=dict(color="rgba(255,160,40,0.6)", width=1, dash="dot"),
+                )
 
         # Tank label
         fig.add_annotation(
@@ -386,8 +427,15 @@ def create_section_view(
     # ── Legend entries ──
     fig.add_trace(go.Scatter(
         x=[None], y=[None], mode="markers",
+        marker=dict(size=12, color=COLORS["deducted_fill"], symbol="square"),
+        name="Deducted Volume (공제 체적)",
+        showlegend=True,
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=[None], y=[None], mode="markers",
         marker=dict(size=12, color=COLORS["submerged_fill"], symbol="square"),
-        name="Submerged Zone (차감 영역)",
+        name="Largest Tank (누출 여유)",
         showlegend=True,
     ))
 
