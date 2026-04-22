@@ -47,7 +47,8 @@
 /* Sidebar selectbox text */
 [data-testid="stSidebar"] [data-baseweb="select"] span,
 [data-testid="stSidebar"] [data-baseweb="select"] div {
-    color: #E0E8F0 !important;
+    color: #FFFFFF !important;
+    background-color: transparent !important;
 }
 
 /* Sidebar input fields */
